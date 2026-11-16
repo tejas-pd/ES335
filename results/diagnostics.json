@@ -401,7 +401,8 @@
       "lookup": 300000.0,
       "linear": 679409.0,
       "forest": 2055339.0,
-      "unseen_model": true
+      "unseen_model": true,
+      "train_count": 0
     },
     {
       "source": "D",
@@ -414,7 +415,8 @@
       "lookup": 310000.0,
       "linear": 523401.0,
       "forest": 2190073.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "D",
@@ -427,7 +429,8 @@
       "lookup": 310000.0,
       "linear": 535452.0,
       "forest": 2102514.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "C",
@@ -440,7 +443,8 @@
       "lookup": 240000.0,
       "linear": 226932.0,
       "forest": 265186.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "B",
@@ -453,7 +457,8 @@
       "lookup": 300000.0,
       "linear": 669710.0,
       "forest": 2055339.0,
-      "unseen_model": true
+      "unseen_model": true,
+      "train_count": 0
     },
     {
       "source": "A",
@@ -466,7 +471,8 @@
       "lookup": 1162000.0,
       "linear": 1741035.0,
       "forest": 1751339.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 167
     },
     {
       "source": "B",
@@ -479,7 +485,8 @@
       "lookup": 300000.0,
       "linear": 649798.0,
       "forest": 2027566.0,
-      "unseen_model": true
+      "unseen_model": true,
+      "train_count": 0
     },
     {
       "source": "D",
@@ -492,7 +499,8 @@
       "lookup": 310000.0,
       "linear": 470748.0,
       "forest": 1825807.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "A",
@@ -505,7 +513,8 @@
       "lookup": 2393000.0,
       "linear": 1631788.0,
       "forest": 2400811.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 40
     },
     {
       "source": "C",
@@ -518,7 +527,8 @@
       "lookup": 240000.0,
       "linear": 251381.0,
       "forest": 293727.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "C",
@@ -531,7 +541,8 @@
       "lookup": 4200000.0,
       "linear": 5240010.0,
       "forest": 1119367.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 13
     },
     {
       "source": "B",
@@ -544,7 +555,8 @@
       "lookup": 300000.0,
       "linear": 688059.0,
       "forest": 2083526.0,
-      "unseen_model": true
+      "unseen_model": true,
+      "train_count": 0
     },
     {
       "source": "D",
@@ -557,7 +569,8 @@
       "lookup": 310000.0,
       "linear": 555097.0,
       "forest": 2104224.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 1
     },
     {
       "source": "C",
@@ -570,7 +583,8 @@
       "lookup": 675000.0,
       "linear": 158698.0,
       "forest": 291307.0,
-      "unseen_model": true
+      "unseen_model": true,
+      "train_count": 0
     },
     {
       "source": "A",
@@ -583,7 +597,8 @@
       "lookup": 1365000.0,
       "linear": 908735.0,
       "forest": 742274.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 43
     },
     {
       "source": "A",
@@ -596,7 +611,8 @@
       "lookup": 623500.0,
       "linear": 277059.0,
       "forest": 288201.0,
-      "unseen_model": false
+      "unseen_model": false,
+      "train_count": 692
     }
   ],
   "recalibration": {
@@ -1487,13 +1503,13 @@
         },
         {
           "offset": -2,
-          "bias": 33.40293037349768,
-          "mae": 283049.06194416306
+          "bias": 33.40293037349746,
+          "mae": 283049.061944163
         },
         {
           "offset": -1,
           "bias": 28.86674810724017,
-          "mae": 262432.26641682873
+          "mae": 262432.2664168287
         },
         {
           "offset": 0,
@@ -1517,7 +1533,7 @@
         },
         {
           "offset": 4,
-          "bias": -3.515126132581148,
+          "bias": -3.5151261325809813,
           "mae": 151575.19904015286
         }
       ]
@@ -1574,7 +1590,7 @@
         {
           "offset": -4,
           "bias": 17.454332606757927,
-          "mae": 173723.3881981704
+          "mae": 173723.38819817043
         },
         {
           "offset": -3,
@@ -1584,7 +1600,7 @@
         {
           "offset": -2,
           "bias": 7.147606777469195,
-          "mae": 145176.6817410025
+          "mae": 145176.6817410026
         },
         {
           "offset": -1,
@@ -1603,13 +1619,13 @@
         },
         {
           "offset": 2,
-          "bias": -16.25097411458931,
-          "mae": 164290.06278758505
+          "bias": -16.250974114589457,
+          "mae": 164290.06278758502
         },
         {
           "offset": 3,
           "bias": -21.974212027176144,
-          "mae": 181290.483081658
+          "mae": 181290.48308165802
         },
         {
           "offset": 4,
@@ -1705,7 +1721,7 @@
         {
           "offset": 3,
           "bias": -37.39001196470362,
-          "mae": 447833.06437639566
+          "mae": 447833.0643763956
         },
         {
           "offset": 4,
@@ -1770,23 +1786,23 @@
         },
         {
           "offset": -3,
-          "bias": 8.67681837261365,
-          "mae": 148892.78469959987
+          "bias": 8.676818372613548,
+          "mae": 148892.78469959993
         },
         {
           "offset": -2,
           "bias": 5.424754182007796,
-          "mae": 139890.0666578101
+          "mae": 139890.06665781018
         },
         {
           "offset": -1,
-          "bias": 1.876295551823226,
+          "bias": 1.876295551823326,
           "mae": 133695.07614001457
         },
         {
           "offset": 0,
           "bias": -2.033880197170551,
-          "mae": 132340.30858900136
+          "mae": 132340.3085890014
         },
         {
           "offset": 1,
@@ -1806,7 +1822,7 @@
         {
           "offset": 4,
           "bias": -26.201639038910702,
-          "mae": 221530.73347636772
+          "mae": 221530.73347636763
         }
       ]
     }

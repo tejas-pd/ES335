@@ -294,12 +294,12 @@ function bandTable() {
 }
 function worstTable() {
   const W = R.diagnostics.worst;
-  let h = `<thead><tr><th>Source</th><th class="txt">Car</th><th>Actual</th><th>Lookup</th><th>Linear</th><th>Forest</th><th class="txt">Name in training sources?</th></tr></thead><tbody>`;
+  let h = `<thead><tr><th>Source</th><th class="txt">Car</th><th>Actual</th><th>Lookup</th><th>Linear</th><th>Forest</th><th class="txt">Model name in training data?</th></tr></thead><tbody>`;
   W.forEach((w) => {
     h += `<tr><td>${w.source}</td><td class="txt">${esc(w.brand_model)} · ${w.age} yrs · ${Math.round(w.km).toLocaleString()} km · ${w.fuel} · ${w.transmission}</td>
-      <td>${L(w.actual)}</td><td>${L(w.lookup)}</td><td>${L(w.linear)}</td><td><strong>${L(w.forest)}</strong></td><td class="txt">${w.unseen_model ? "name not seen" : "yes"}</td></tr>`;
+      <td>${L(w.actual)}</td><td>${L(w.lookup)}</td><td>${L(w.linear)}</td><td><strong>${L(w.forest)}</strong></td><td class="txt">${w.train_count === 0 ? "no (different spelling)" : w.train_count < 5 ? `yes, but only ${w.train_count} listing${w.train_count === 1 ? "" : "s"}` : `yes (${w.train_count} listings)`}</td></tr>`;
   });
-  $("worst-table").innerHTML = h + `</tbody><caption class="small" style="caption-side:bottom;text-align:left;padding-top:6px">Largest forest % errors on each held-out source (4 per source).</caption>`;
+  $("worst-table").innerHTML = h + `</tbody><caption class="small" style="caption-side:bottom;text-align:left;padding-top:6px">Largest forest % errors on each held-out source (4 per source). The last column counts listings with exactly this name in the three training sources. Names that never appear, or appear fewer than 5 times, all go into one shared "rare model" category.</caption>`;
 }
 
 // ---------------------------------------------------------------- recalibration

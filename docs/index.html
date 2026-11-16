@@ -251,6 +251,10 @@
       price of ₹24 L and are mostly Audi, Volvo and Mercedes, so the forest gives a cheap rare automatic a luxury
       price. The lookup, which uses the actual model
       median, gets these right. A target or brand-level encoding of rare models would be a sensible fix.</li>
+    <li><strong>Inconsistent spelling turns a common car into an "unknown" one.</strong> Datsun's redi-GO is
+      "redigo" or "redi-go" in A, "redi go" in B, "redi" or "redi-go" in C and "redi" in D. The models match names as
+      exact text, so when B is held out none of its 75 redi-GO listings are recognised, although the same car appears
+      in every other source. "tata new" in C is the same problem.</li>
     <li><strong>Likely label errors.</strong> A ₹2.0 L Porsche Cayenne, a ₹3 L Innova and a ₹44k Nano are probably
       unit or entry mistakes. All models "fail" on them, and they inflate RMSE more than MAE.</li>
   </ul>
@@ -323,6 +327,10 @@
       definitions, inflation over time or platform pricing.</li>
     <li><strong>Few features.</strong> Variant, condition, city and listing date are missing or inconsistent. The
       ablation shows the extra specs help in-distribution, but they are not available everywhere.</li>
+    <li><strong>Model names are not standardised across sources.</strong> We found this by inspecting errors on the
+      held-out sources, so we did not fix it and re-run: that would let the test sources shape the model. A natural
+      next step, tested on fresh data, would be to normalise spellings (for example removing spaces and hyphens) and
+      to group rare models by brand instead of one shared "rare" category.</li>
     <li><strong>Listed prices, not transaction prices</strong>, and some labels look wrong.</li>
     <li><strong>The compact website forest</strong> differs slightly from the evaluated forest. All reported metrics
       come from the full models in <code>src/evaluate.py</code>.</li>

@@ -53,9 +53,13 @@ def main(path):
 
     # ---- largest errors (forest), with context ----
     pr["ape_forest"] = np.abs(pr.forest - pr.actual) / pr.actual * 100
-    worst = pr.sort_values("ape_forest", ascending=False).groupby("source").head(4)
+    worst = pr.sort_values("ape_forest", ascending=False).groupby("source").head(4).copy()
+    # How many listings with this exact name the model saw in its training sources
+    worst["train_count"] = [int(((df.source != s) & (df.brand_model == bm)).sum())
+                            for s, bm in zip(worst.source, worst.brand_model)]
     out["worst"] = worst[["source", "brand_model", "age", "km", "fuel", "transmission", "actual",
-                          "lookup", "linear", "forest", "unseen_model"]].round(0).to_dict(orient="records")
+                          "lookup", "linear", "forest", "unseen_model", "train_count"]
+                         ].round(0).to_dict(orient="records")
 
     # ---- few-shot recalibration ----
     rng = np.random.default_rng(SEED)

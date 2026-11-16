@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Used-Car Price Prediction Under Dataset Shift · ES 335</title>
+<meta name="description" content="Do used-car price models trained on some Indian listing sources work on a source they have never seen? ES 335 course project.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%23b5452b%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">ES 335 · Course project · Kushal Kumar (24110178) &amp; Tejas Prasad (24110369)</p>
+    <h1>Used-car price prediction under dataset shift</h1>
+    <p class="lede">A model that prices used cars well on a random test split loses much of its accuracy when it is
+      applied to listings from a source it has never seen. On a new source it is often no better than looking up the
+      median price of the same car model.</p>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#question">Question</a><a href="#data">Data</a><a href="#prep">Preprocessing</a>
+    <a href="#methods">Methods</a><a href="#evaluation">Evaluation</a><a href="#results">Results</a>
+    <a href="#errors">Errors</a><a href="#try">Try it</a><a href="#limits">Limitations</a>
+    <a href="#conclusion">Conclusion</a><a href="#reproduce">Reproduce</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ======================= QUESTION ======================= -->
+<section id="question">
+  <h2>1. Question and scope</h2>
+  <p class="q">How accurately can machine-learning models predict the selling price of a used car in India, and does that
+    accuracy hold when the model is applied to listings from a data source it was not trained on?</p>
+  <div class="grid3">
+    <div class="card"><h4>One row</h4><p>One used-car listing: a car offered at a stated price.</p></div>
+    <div class="card"><h4>Target</h4><p>Selling price in rupees (₹). We report errors in lakh (1 L = ₹100,000).</p></div>
+    <div class="card"><h4>Prediction time</h4><p>When a car is listed. We use only what a seller knows then:
+      brand, model, age, kilometres driven, fuel and transmission.</p></div>
+  </div>
+  <p><strong>Why it matters.</strong> A pricing model is usually built on one platform's data and then used on new
+    listings, sometimes from another platform, city or year. A random train/test split hides this, because test cars
+    come from the same sources as training cars. We therefore report two numbers for every model: in-distribution
+    accuracy and accuracy on a held-out source.</p>
+  <p><strong>What we do not claim.</strong> The models predict <em>listed</em> prices in these datasets, not a car's
+    true market value. Feature effects are associations; for example, "older cars sell for less" here is not a causal
+    estimate. Results apply to these four Indian sources and the years they cover.</p>
+</section>
+
+<!-- ======================= DATA ======================= -->
+<section id="data">
+  <h2>2. Data</h2>
+  <p><strong>Source.</strong> <a href="https://www.kaggle.com/datasets/satvshr/top-4-used-car-sales-datasets-combined"><em>Top 4 Used Car Sales Datasets Combined</em></a> (Kaggle, file <code>output.csv</code>): four public Indian used-car datasets
+    merged into one file of 32,200 rows and 14 columns (brand, model, transmission, age, fuel, engine, km, owner, price,
+    location, mileage, power, seats, body type). The data are public and contain no personal information. We
+    redistribute only derived summaries and a sample of predictions, not the raw file.</p>
+
+  <h3>Recovering the four sources</h3>
+  <p>The merged file has no column saying which original dataset a row came from, but our evaluation needs that.
+    Each original dataset recorded a different set of columns, so the <em>pattern of missing columns</em> identifies
+    the source. Four patterns cover all rows. The rules are in <code>src/prepare.py</code>.</p>
+  <div class="table-wrap"><table id="source-table"></table></div>
+  <p class="note">Labels A–D are ours. We did not match them to the original Kaggle dataset names, so we describe
+    each source by what it contains.</p>
+
+  <h3>The sources differ in ways that matter for prediction</h3>
+  <div class="fig2">
+    <figure><img src="figures/price_by_source.png" alt="Price distributions by source on a log scale. Source C has a long upper tail from luxury cars; sources B and D are narrower.">
+      <figcaption>Price distribution per source. C has 15% luxury brands; B and D have almost none.</figcaption></figure>
+    <figure><img src="figures/price_vs_age.png" alt="Median price against recorded age for each source. At the same recorded age, source C prices are highest and source A lowest.">
+      <figcaption>Median price by recorded age. At the same recorded age, the price levels differ by source.</figcaption></figure>
+  </div>
+  <p>The clearest check holds the car fixed. The table shows the median price (₹ lakh) of the ten most common models
+    for cars aged 5–8 years. Source A is consistently cheapest and C most expensive, so "age" or "price" probably does
+    not mean exactly the same thing in each source. Possible reasons include different collection years, age computed
+    from different reference years, or different platforms (dealer versus private seller). We cannot tell these apart
+    from the data.</p>
+  <div class="table-wrap"><table id="same-model"></table></div>
+
+  <h3>Data-quality issues</h3>
+  <ul>
+    <li><strong>Missing columns by design:</strong> engine, owner, mileage, power, seats, location and body type are
+      each absent from one or more sources (table above). Only brand, model, age, km, fuel, transmission and price exist
+      everywhere.</li>
+    <li><strong>Inconsistent model names</strong> across sources (Datsun's redi-GO appears as "redi go", "redigo", "redi-go" and "redi"; "swift dzire" vs "dzire"). We do not
+      merge these by hand, because a pricing tool would meet the same messiness on a new platform. <span id="unseen-text"></span></li>
+    <li><strong>Duplicates and impossible values:</strong> 185 exact duplicate listings, 17 odometer readings above
+      500,000 km (max 6.5 million), and 0 used as a missing code for mileage and seats.</li>
+    <li><strong>Suspect prices</strong> remain, such as a 5-year-old Porsche Cayenne listed at ₹2.0 L. We keep them
+      because we cannot verify them, and we show them in the error analysis.</li>
+  </ul>
+</section>
+
+<!-- ======================= PREPROCESSING ======================= -->
+<section id="prep">
+  <h2>3. Preprocessing</h2>
+  <div class="grid2">
+    <div class="card">
+      <h4>Fixed row-level rules (before splitting)</h4>
+      <ul id="clean-list"></ul>
+      <p class="small">These rules use no statistics from the data, so applying them before the split cannot leak
+        test information.</p>
+    </div>
+    <div class="card">
+      <h4>Learned steps (inside the model pipeline, training data only)</h4>
+      <ul>
+        <li>One-hot encoding of brand, brand+model, fuel and transmission. The category list is learned from the
+          training fold; models with fewer than 5 training listings share one "rare" column, and unseen models map to
+          it too.</li>
+        <li>Linear model: age, age² and log(1 + km), standardised with training-fold mean and SD.</li>
+        <li>Target: log(price). Prices are right-skewed and depreciation is roughly multiplicative, so errors on
+          the log scale are more even across cheap and expensive cars. Predictions are converted back with exp(·).</li>
+        <li>Ablation only: median imputation plus missing indicators for engine, power, mileage, seats and owner,
+          fitted on training data.</li>
+      </ul>
+    </div>
+  </div>
+  <p><strong>Feature choice.</strong> The main models use only the six features recorded in every source. The extra
+    specs are missing for whole sources (for example, B has no engine column), so a model using them would see an
+    all-missing column on some held-out sources. We test their in-distribution value as a separate ablation.</p>
+</section>
+
+<!-- ======================= METHODS ======================= -->
+<section id="methods">
+  <h2>4. Baselines and methods</h2>
+  <div class="grid2">
+    <div class="card m-mean"><h4>Mean baseline</h4><p>Predicts the average training price for every car. This is the
+      proposal's reference point: any model must beat it to be useful.</p></div>
+    <div class="card m-lookup"><h4>Model-median lookup <span class="tag">added</span></h4><p>Median training price of
+      the same brand+model, falling back to the brand and then the overall median. It ignores age and km. It is what a
+      person would do with a price list, so it is a stronger and more realistic baseline than the mean.</p></div>
+    <div class="card m-linear"><h4>Linear regression (ridge, log price)</h4><p>Objective: least squares on log price
+      plus an L2 penalty α‖w‖². Assumes each model has a fixed log-price offset and that depreciation is a smooth
+      (quadratic) function of age plus a log-km effect, the same for all models. It is interpretable, and the penalty
+      keeps coefficients for rare models stable.</p></div>
+    <div class="card m-forest"><h4>Random forest (log price)</h4><p>Averages many regression trees, each grown on a
+      bootstrap sample and split to reduce squared error. It needs no assumed functional form and captures
+      interactions (for example, luxury cars depreciating faster). It cannot extrapolate beyond the training range.</p></div>
+  </div>
+  <p><strong>Tuning grids.</strong> Ridge α ∈ {0.1, 1, 10}. Forest: 120 trees, min samples per leaf ∈ {2, 5},
+    fraction of features per split ∈ {0.3, 0.6}. Selection is by mean validation MAE.</p>
+</section>
+
+<!-- ======================= EVALUATION ======================= -->
+<section id="evaluation">
+  <h2>5. Evaluation design</h2>
+  <p>Both designs were fixed before any model was compared.</p>
+  <div class="grid2">
+    <div class="card">
+      <h4>A. Random split (in-distribution)</h4>
+      <p>80/20 split stratified by source (25,597 train / 6,400 test). Hyperparameters are chosen by 5-fold CV on the
+        80% only. The 20% is scored once.</p>
+    </div>
+    <div class="card">
+      <h4>B. Leave-one-source-out (dataset shift)</h4>
+      <p>For each source: train on the other three and score once on the held-out source. Tuning uses an
+        <em>inner</em> leave-one-source-out CV over the three training sources, so the held-out source is never used
+        for any choice. Tuning on the training sources also favours settings that transfer.</p>
+    </div>
+  </div>
+  <div class="loso-diagram" id="loso-diagram" aria-label="Diagram of leave-one-source-out folds"></div>
+  <h3>Metrics</h3>
+  <ul>
+    <li><strong>MAE (₹), primary:</strong> the typical error in rupees, as planned in the proposal.</li>
+    <li><strong>RMSE (₹):</strong> weights large misses more heavily. It is dominated by expensive cars.</li>
+    <li><strong>Median absolute % error</strong> and <strong>% within ±20%</strong>: comparable across sources with
+      different price levels.</li>
+    <li><strong>Median signed % error (bias):</strong> shows whether a model systematically over- or under-prices a
+      source. This is the clearest signature of shift.</li>
+  </ul>
+  <p><strong>Uncertainty.</strong> 95% intervals come from 1,000 bootstrap resamples of test rows. Model differences
+    are bootstrapped in pairs on the same resampled rows. These intervals reflect sampling of listings within a source.
+    They do not cover the much larger uncertainty about which source comes next: with only four sources, we report each
+    one separately instead of averaging.</p>
+</section>
+
+<!-- ======================= RESULTS ======================= -->
+<section id="results">
+  <h2>6. Results</h2>
+  <h3>In-distribution versus held-out source</h3>
+  <p>Grey bars show the random-split test error for cars from each source. Coloured bars show the error when that
+    source was held out entirely. Choose a metric:</p>
+  <div class="controls" id="bar-controls">
+    <label><input type="radio" name="barmetric" value="mae" checked> MAE (₹ L)</label>
+    <label><input type="radio" name="barmetric" value="medape"> Median abs % error</label>
+    <label><input type="radio" name="barmetric" value="bias_pct"> Bias (median signed %)</label>
+    <label><input type="radio" name="barmetric" value="rmse"> RMSE (₹ L)</label>
+  </div>
+  <div id="bars" class="chart"></div>
+
+  <div class="table-wrap"><table id="main-table"></table></div>
+  <p class="note" id="tuning-note"></p>
+
+  <div class="findings">
+    <div class="finding"><b>1</b><p><strong>In-distribution, ML clearly helps.</strong> On the random split, the forest
+      (MAE ₹1.23 L) and linear model (₹1.28 L) improve on the model-median lookup (₹1.87 L) by about a third, and on
+      the mean baseline (₹3.97 L) by two-thirds. The forest beats the linear model by ₹0.05 L (95% CI 0.01–0.08),
+      which is real but small.</p></div>
+    <div class="finding"><b>2</b><p><strong>On an unseen source, errors roughly double</strong> (forest MAE: A 1.19 →
+      2.37, B 0.84 → 1.39, C 2.02 → 3.39, D 0.87 → 1.32 lakh). The advantage over the lookup largely disappears:
+      the forest is within ±6% of it on A, B and C, and the paired CI for B includes zero.</p></div>
+    <div class="finding"><b>3</b><p><strong>The damage is mostly bias, not noise.</strong> Held-out A is over-priced by
+      about 24–28% and held-out C under-priced by about 21–23%. B and D show almost no bias. The lookup has little
+      bias because it ignores age (see the age check in <a href="#errors">Errors</a>).</p></div>
+    <div class="finding"><b>4</b><p><strong>The more complex model is not the more robust one.</strong> Under shift, the
+      linear model beats the forest on C (by ₹0.08 L) and on D (by ₹0.27 L; 95% CI 0.21–0.34). The forest's
+      in-distribution edge does not transfer.</p></div>
+  </div>
+
+  <h3>Interactive: inspect the held-out predictions</h3>
+  <p>Each dot is a listing (up to 700 sampled per source; metrics use every row). Points on the diagonal are exact.
+    Points above it are over-priced and points below it under-priced. Hover over a dot for details. Switch to
+    "random split" to see the same cars when their source was available in training.</p>
+  <div class="explorer">
+    <div class="controls">
+      <label>Evaluation <select id="ex-design"><option value="loso">Held-out source (shift)</option><option value="random">Random split</option></select></label>
+      <label>Source <select id="ex-source"><option>A</option><option>B</option><option selected>C</option><option>D</option></select></label>
+      <label>Model <select id="ex-model"><option value="mean">Mean baseline</option><option value="lookup">Model-median lookup</option><option value="linear">Linear (ridge)</option><option value="forest" selected>Random forest</option></select></label>
+      <label class="chk"><input type="checkbox" id="ex-unseen"> Highlight car models absent from training</label>
+    </div>
+    <div class="ex-body">
+      <div class="scatter-wrap"><canvas id="scatter" width="560" height="460" aria-label="Actual versus predicted price scatter"></canvas><div id="tip" class="tip" hidden></div></div>
+      <div class="ex-stats" id="ex-stats"></div>
+    </div>
+  </div>
+
+  <h3>Do the extra specs help? (ablation)</h3>
+  <p id="ablation-text"></p>
+</section>
+
+<!-- ======================= ERRORS ======================= -->
+<section id="errors">
+  <h2>7. Errors and what explains them</h2>
+
+  <h3>Where the forest goes wrong on held-out sources</h3>
+  <p>Median absolute % error by actual price band (signed bias in brackets). Darker cells mean larger errors.</p>
+  <div class="table-wrap"><table id="band-table" class="heat"></table></div>
+  <p>On every held-out source, the forest over-prices the cheapest cars and under-prices the most expensive ones.
+    This is regression to the middle, made worse on C, the source with the most luxury cars (47% median error above ₹20 L).</p>
+
+  <h3>Representative large errors</h3>
+  <div class="table-wrap"><table id="worst-table"></table></div>
+  <ul>
+    <li><strong>The "rare model" bucket fails for cheap rare cars.</strong> Datsun redi-GO automatics (~₹3 L) are
+      priced at ₹18–22 L by the forest. The model had fewer than 5 training listings, or appeared under a spelling never seen
+      in training, so it was encoded as "rare". When D is held out, the automatics in that rare bucket have a median
+      price of ₹24 L and are mostly Audi, Volvo and Mercedes, so the forest gives a cheap rare automatic a luxury
+      price. The lookup, which uses the actual model
+      median, gets these right. A target or brand-level encoding of rare models would be a sensible fix.</li>
+    <li><strong>Likely label errors.</strong> A ₹2.0 L Porsche Cayenne, a ₹3 L Innova and a ₹44k Nano are probably
+      unit or entry mistakes. All models "fail" on them, and they inflate RMSE more than MAE.</li>
+  </ul>
+
+  <h3>Is the bias an age-definition shift? (diagnostic)</h3>
+  <div class="fig2">
+    <figure><img src="figures/age_offset.png" alt="Median signed error of the linear model as years are added to the held-out source's recorded age. Source A's bias crosses zero at about plus 3.5 years, source C's at about minus 3 years.">
+      <figcaption>Linear model: bias on the held-out source if we add k years to its recorded age.</figcaption></figure>
+    <div>
+      <p>We refitted each held-out model and shifted the held-out source's recorded age. Source A's +28% bias
+        disappears at about <strong>+3.5 years</strong> and C's −23% at about <strong>−3 years</strong>. B and D are
+        already near zero. A gap of about 6–7 years between A and C is what you would expect if "age" were measured
+        against different reference years, for example data collected years apart.</p>
+      <p class="note">This uses test labels, so it is a diagnostic, not a model. It shows the bias is
+        <em>consistent with</em> an age or collection-time shift. It cannot rule out a real price-level difference
+        between platforms, which would look the same.</p>
+    </div>
+  </div>
+
+  <h3>Interactive: what if we had a few labelled listings from the new source?</h3>
+  <p>A practical remedy for bias is to label k listings from the new source and rescale every prediction by their
+    median actual/predicted ratio. Each point averages 200 random draws of k listings, scored on the rest.</p>
+  <div class="controls">
+    <label>Held-out source <select id="rc-source"><option>A</option><option>B</option><option selected>C</option><option>D</option></select></label>
+    <label>k = <output id="rc-kout">25</output><input type="range" id="rc-k" min="0" max="6" value="3" step="1"></label>
+  </div>
+  <div class="recal">
+    <div id="recal-chart" class="chart"></div>
+    <div id="recal-stats" class="ex-stats"></div>
+  </div>
+  <p>The correction helps only where there is bias. With 25 labels, linear MAE on A falls from ₹2.41 L to ₹1.64 L
+    and on C from ₹3.31 L to ₹2.61 L. On B and D, where bias is near zero, it adds noise and makes things slightly
+    worse when k is small. It does not fix the luxury-car or rare-model errors.</p>
+</section>
+
+<!-- ======================= TRY IT ======================= -->
+<section id="try">
+  <h2>8. Try it: price a car</h2>
+  <p>These models were retrained on all four sources: ridge with the random-split α, and a compact 20-tree forest
+    whose random-split MAE (<span id="compact-mae"></span>) is close to the full forest's
+    (<span id="full-mae"></span>). The error range shown is the held-out-source median % error, a fairer guide than the
+    random-split figure for listings from a new platform.</p>
+  <div class="predict">
+    <form id="pform" onsubmit="return false">
+      <label>Brand <select id="p-brand"></select></label>
+      <label>Model <select id="p-model"></select></label>
+      <label>Age (years) <input type="number" id="p-age" min="0" max="25" step="1" value="6"></label>
+      <label>Kilometres driven <input type="number" id="p-km" min="0" max="500000" step="1000" value="50000"></label>
+      <label>Fuel <select id="p-fuel"><option>petrol</option><option>diesel</option><option>cng</option><option>lpg</option><option>electric</option></select></label>
+      <label>Transmission <select id="p-tr"><option>manual</option><option>automatic</option></select></label>
+    </form>
+    <div id="p-out" class="p-out"><p class="small">Loading models…</p></div>
+  </div>
+  <div class="controls"><label>Depreciation curve: vary age from 0 to 20 with other inputs fixed</label></div>
+  <div id="dep-chart" class="chart"></div>
+  <p class="note">The forest's curve is a step function. It can only reproduce price levels seen in training, so
+    it is not guaranteed to fall with age the way the linear model's smooth curve does. The two models can disagree sharply on rare models. That disagreement is a useful warning sign
+    (see the Datsun example above).</p>
+</section>
+
+<!-- ======================= LIMITATIONS ======================= -->
+<section id="limits">
+  <h2>9. Limitations</h2>
+  <ul>
+    <li><strong>The sources are reconstructed, not given.</strong> The missingness rules are clean (four patterns
+      account for every row), but we could not confirm them against the original files.</li>
+    <li><strong>Four sources is a small sample of "shift".</strong> Each held-out result is one draw. The bootstrap
+      intervals describe noise within a source, not how a fifth platform would behave.</li>
+    <li><strong>Age, price level and platform are confounded.</strong> We cannot tell whether the bias comes from age
+      definitions, inflation over time or platform pricing.</li>
+    <li><strong>Few features.</strong> Variant, condition, city and listing date are missing or inconsistent. The
+      ablation shows the extra specs help in-distribution, but they are not available everywhere.</li>
+    <li><strong>Listed prices, not transaction prices</strong>, and some labels look wrong.</li>
+    <li><strong>The compact website forest</strong> differs slightly from the evaluated forest. All reported metrics
+      come from the full models in <code>src/evaluate.py</code>.</li>
+  </ul>
+</section>
+
+<!-- ======================= CONCLUSION ======================= -->
+<section id="conclusion">
+  <h2>10. Conclusion</h2>
+  <p>On a random split, both ML models give a large, statistically clear improvement over simple baselines. This is
+    the number usually reported. When the test listings come from a source the model has never seen, errors roughly
+    double and most of the advantage over a model-median lookup disappears. The main cause is systematic bias on two
+    of the four sources (±20–28%), consistent with differences in how age or price level is recorded. The more
+    flexible random forest is no more robust than ridge regression, and is worse on two held-out sources. For a pricing
+    tool to be used on a new platform, a random-split score overstates reliability. A small labelled sample from the
+    new platform is the cheapest way to detect and partly correct the bias.</p>
+</section>
+
+<!-- ======================= REPRODUCE ======================= -->
+<section id="reproduce">
+  <h2>11. Reproduce</h2>
+  <ol>
+    <li>Download <a href="https://www.kaggle.com/datasets/satvshr/top-4-used-car-sales-datasets-combined"><em>Top 4 Used Car Sales Datasets Combined</em></a> from Kaggle and save the CSV as <code>data/raw.csv</code>
+      (32,200 rows). It is not redistributed in the repository.</li>
+    <li><code>pip install -r requirements.txt</code> (Python 3.10+, scikit-learn 1.4+).</li>
+    <li>Run in order:
+<pre>python src/prepare.py data/raw.csv data/clean.csv   # cleaning + source reconstruction
+python src/explore.py data/clean.csv                # data summaries, figures
+python src/evaluate.py data/clean.csv               # random split + leave-one-source-out (~10 min, 2 cores)
+python src/diagnostics.py data/clean.csv            # error analysis, recalibration, age check
+python src/export_web.py data/clean.csv docs/data   # website data + compact models</pre></li>
+    <li>Or run <code>walkthrough.ipynb</code>, which executes the same steps and shows the main tables.</li>
+    <li>View the site locally: <code>python -m http.server -d docs</code>, then open <code>localhost:8000</code>.</li>
+  </ol>
+  <p><strong>Splits:</strong> random split uses <code>train_test_split(test_size=0.2, stratify=source,
+    random_state=42)</code>. Source rules are in <code>src/prepare.py</code>. All seeds are 42.</p>
+</section>
+
+<section id="team">
+  <h2>Team, contributions and tools</h2>
+  <!-- EDIT BEFORE PUBLISHING: replace with each member's actual contribution. -->
+  <p><strong>Kushal Kumar (24110178)</strong> and <strong>Tejas Prasad (24110369)</strong>. Contributions: <em>[fill
+    in who did what: data audit, modelling, evaluation, website]</em>.</p>
+  <p><strong>AI disclosure.</strong> We used Claude (Anthropic) to help write the analysis code and website and to edit
+    text. We reviewed the code, re-ran the pipeline and checked the reported numbers against the output files.
+    Libraries: pandas, NumPy, scikit-learn, Matplotlib. The website uses no external libraries.</p>
+</section>
+</main>
+<footer><div class="wrap small">ES 335 course project · data: Kaggle "Top 4 Used Car Sales Datasets Combined" (public) · static site, no tracking</div></footer>
+<script src="models.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

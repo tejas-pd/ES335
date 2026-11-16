@@ -1,0 +1,209 @@
+{
+  "n": 31997,
+  "sources": {
+    "A": {
+      "n": 15187,
+      "price_median": 555000.0,
+      "price_mean": 756018.6261276092,
+      "price_p05": 215000.0,
+      "price_p95": 2000000.0,
+      "age_median": 6.0,
+      "km_median": 50000.0,
+      "automatic_pct": 20.517547902811614,
+      "diesel_pct": 48.13985645617962,
+      "n_brands": 29,
+      "n_models": 118,
+      "luxury_pct": 7.2825442812932115,
+      "recorded_pct": {
+        "engine": 100.0,
+        "owner": 0.0,
+        "location": 0.0,
+        "mileage": 100.0,
+        "power": 100.0,
+        "seats": 99.98683084216763,
+        "type": 0.0
+      },
+      "top_brands": {
+        "maruti": 4930,
+        "hyundai": 2945,
+        "honda": 1474,
+        "mahindra": 997,
+        "toyota": 787
+      }
+    },
+    "B": {
+      "n": 8013,
+      "price_median": 535000.0,
+      "price_mean": 574831.7858479971,
+      "price_p05": 248000.0,
+      "price_p95": 1032799.9999999993,
+      "age_median": 7.0,
+      "km_median": 50359.0,
+      "automatic_pct": 19.455884188194183,
+      "diesel_pct": 13.303382004243106,
+      "n_brands": 16,
+      "n_models": 126,
+      "luxury_pct": 0.012479720454261826,
+      "recorded_pct": {
+        "engine": 0.0,
+        "owner": 100.0,
+        "location": 97.3542992636965,
+        "mileage": 0.0,
+        "power": 0.0,
+        "seats": 100.0,
+        "type": 100.0
+      },
+      "top_brands": {
+        "maruti": 3433,
+        "hyundai": 2007,
+        "honda": 829,
+        "renault": 385,
+        "tata": 350
+      }
+    },
+    "C": {
+      "n": 5993,
+      "price_median": 560000.0,
+      "price_mean": 921430.6691139663,
+      "price_p05": 170000.0,
+      "price_p95": 3167199.9999999953,
+      "age_median": 10.0,
+      "km_median": 53211.0,
+      "automatic_pct": 28.333055231102954,
+      "diesel_pct": 53.2120807608877,
+      "n_brands": 29,
+      "n_models": 213,
+      "luxury_pct": 15.151009511096278,
+      "recorded_pct": {
+        "engine": 100.0,
+        "owner": 100.0,
+        "location": 100.0,
+        "mileage": 98.86534290005005,
+        "power": 98.21458368096113,
+        "seats": 99.28249624561988,
+        "type": 0.0
+      },
+      "top_brands": {
+        "maruti": 1209,
+        "hyundai": 1106,
+        "honda": 608,
+        "toyota": 411,
+        "volkswagen": 314
+      }
+    },
+    "D": {
+      "n": 2804,
+      "price_median": 594000.0,
+      "price_mean": 671567.4037089872,
+      "price_p05": 288150.0,
+      "price_p95": 1383000.0,
+      "age_median": 6.0,
+      "km_median": 45699.5,
+      "automatic_pct": 31.383737517831666,
+      "diesel_pct": 11.340941512125536,
+      "n_brands": 15,
+      "n_models": 89,
+      "luxury_pct": 0.0,
+      "recorded_pct": {
+        "engine": 95.82738944365192,
+        "owner": 100.0,
+        "location": 0.0,
+        "mileage": 0.0,
+        "power": 0.0,
+        "seats": 0.0,
+        "type": 0.0
+      },
+      "top_brands": {
+        "maruti": 925,
+        "hyundai": 659,
+        "honda": 276,
+        "tata": 240,
+        "renault": 167
+      }
+    }
+  },
+  "model_overlap": {
+    "A": {
+      "B": 81.22736550997564,
+      "C": 86.6728122736551,
+      "D": 75.4131823269902
+    },
+    "B": {
+      "A": 58.167977037314365,
+      "C": 58.529888930487964,
+      "D": 64.48271558717084
+    },
+    "C": {
+      "A": 69.21408309694644,
+      "B": 59.41932254296679,
+      "D": 64.5920240280327
+    },
+    "D": {
+      "A": 77.17546362339515,
+      "B": 79.95720399429386,
+      "C": 81.41940085592012
+    }
+  },
+  "same_model_median_lakh_age5to8": {
+    "honda amaze": {
+      "A": 4.25,
+      "B": 6.08,
+      "C": 5.65,
+      "D": 5.78
+    },
+    "honda city": {
+      "A": 6.27,
+      "B": 7.12,
+      "C": 9.44,
+      "D": 7.18
+    },
+    "hyundai grand": {
+      "A": 4.3,
+      "B": NaN,
+      "C": 5.62,
+      "D": 5.03
+    },
+    "hyundai i10": {
+      "A": 3.38,
+      "B": 3.74,
+      "C": 4.06,
+      "D": 3.96
+    },
+    "hyundai i20": {
+      "A": 5.3,
+      "B": NaN,
+      "C": 6.92,
+      "D": 6.06
+    },
+    "hyundai verna": {
+      "A": 5.62,
+      "B": 7.25,
+      "C": 8.7,
+      "D": 7.85
+    },
+    "maruti alto": {
+      "A": 2.65,
+      "B": 3.52,
+      "C": 3.27,
+      "D": 3.1
+    },
+    "maruti baleno": {
+      "A": 5.75,
+      "B": 6.06,
+      "C": 7.0,
+      "D": 5.73
+    },
+    "maruti swift": {
+      "A": 4.5,
+      "B": 5.62,
+      "C": 5.95,
+      "D": 5.36
+    },
+    "maruti swift dzire": {
+      "A": 4.89,
+      "B": 6.0,
+      "C": NaN,
+      "D": NaN
+    }
+  }
+}

@@ -1,0 +1,6 @@
+random split done 230s
+held-out A done 292s  mean=410812 lookup=249827 linear=241109 forest=237137
+held-out B done 379s  mean=288242 lookup=138152 linear=141763 forest=139210
+held-out C done 484s  mean=593603 lookup=359627 linear=330973 forest=339148
+held-out D done 600s  mean=269982 lookup=136585 linear=105542 forest=132340
+total 600s

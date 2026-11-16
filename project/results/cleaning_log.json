@@ -1,0 +1,22 @@
+{
+  "raw_rows": 32200,
+  "dropped_missing_identity": 1,
+  "unassigned_source": 0,
+  "source_counts_before_dedup": {
+    "A": 15381,
+    "B": 8014,
+    "C": 5999,
+    "D": 2805
+  },
+  "dropped_exact_duplicates": 185,
+  "dropped_km_over_500k": 17,
+  "zero_to_missing_mileage": 68,
+  "zero_to_missing_seats": 3,
+  "final_rows": 31997,
+  "source_counts": {
+    "A": 15187,
+    "B": 8013,
+    "C": 5993,
+    "D": 2804
+  }
+}

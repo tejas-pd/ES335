@@ -74,6 +74,6 @@ We used Claude (Anthropic, via claude.ai) occasionally throughout the project as
 
 ## Contributions
 
-**Tejas Prasad**: co-wrote the proposal; owns the data audit, source reconstruction and evaluation design; verified the cleaning and evaluation outputs.
-
 **Kushal Kumar**: co-wrote the proposal; owns the modelling choices and the website; verified the model results and published the site.
+
+**Tejas Prasad**: co-wrote the proposal; owns the data audit, source reconstruction and evaluation design; verified the cleaning and evaluation outputs.

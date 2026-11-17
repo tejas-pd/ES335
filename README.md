@@ -5,7 +5,7 @@ ES 335 course project, Kushal Kumar (24110178) and Tejas Prasad (24110369).
 **Question.** How accurately can ML models predict the selling price of a used car in India, and does that accuracy
 hold when the model is applied to listings from a data source it was not trained on?
 
-**Website:** https://tejas-pd.github.io/ES335/ (served from `docs/`)
+**Website:** 'https://tejas-pd.github.io/ES335/'
 
 ## Main result
 

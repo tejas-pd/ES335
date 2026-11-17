@@ -5,7 +5,7 @@ ES 335 course project, Kushal Kumar (24110178) and Tejas Prasad (24110369).
 **Question.** How accurately can ML models predict the selling price of a used car in India, and does that accuracy
 hold when the model is applied to listings from a data source it was not trained on?
 
-**Website:** `https://tejas-pd.github.io/ES335/` 
+**Website:** https://tejas-pd.github.io/ES335/ (served from `docs/`)
 
 ## Main result
 
@@ -77,3 +77,4 @@ We used Claude (Anthropic, via claude.ai) occasionally throughout the project as
 **Kushal Kumar**: co-wrote the proposal; owns the modelling choices and the website; verified the model results and published the site.
 
 **Tejas Prasad**: co-wrote the proposal; owns the data audit, source reconstruction and evaluation design; verified the cleaning and evaluation outputs.
+

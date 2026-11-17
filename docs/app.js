@@ -5,6 +5,11 @@ const MODELS = ["mean", "lookup", "linear", "forest"];
 const NAME = { mean: "Mean baseline", lookup: "Model-median lookup", linear: "Linear (ridge)", forest: "Random forest" };
 const SHORT = { mean: "mean", lookup: "lookup", linear: "linear", forest: "forest" };
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// Theme-dependent chart colours, refreshed whenever the theme changes
+const T = {};
+function refreshTheme() {
+  Object.assign(T, { muted: css("--muted"), grid: css("--grid"), axis: css("--axis"), alt: css("--bar-alt"), fg: css("--fg") });
+}
 const COL = {}; [...SRC, ...MODELS].forEach((k) => (COL[k] = css("--" + k)));
 const $ = (id) => document.getElementById(id);
 const L = (x, d = 2) => "₹" + (x / 1e5).toFixed(d) + " L";
@@ -19,7 +24,7 @@ function svgEl(tag, attrs, parent) {
   return e;
 }
 function text(parent, x, y, s, attrs = {}) {
-  const t = svgEl("text", { x, y, "font-size": 12, fill: "#5d6576", ...attrs }, parent);
+  const t = svgEl("text", { x, y, "font-size": 12, fill: T.muted, ...attrs }, parent);
   t.textContent = s;
   return t;
 }
@@ -38,6 +43,7 @@ Promise.all([fetch("data/results.json").then((r) => r.json()), fetch("data/point
     R = r; P = p;
     kpis(); sourceTable(); sameModel(); cleaning(); losoDiagram();
     initBars(); mainTable(); initExplorer(); ablation(); bandTable(); worstTable(); initRecal();
+    showTab(location.hash.slice(1) || TABS[0], false);
     fetch("data/models.json").then((x) => x.json()).then((m) => { MOD = m; initPredictor(); });
   })
   .catch((e) => {
@@ -135,27 +141,32 @@ function drawBars() {
   const y = (v) => m.t + (H - m.t - m.b) * (1 - (v - lo_) / (hi - lo_));
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Grouped bar chart of error by source and model" });
   ticks.forEach((t) => {
-    svgEl("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: t === 0 ? "#888" : "#ebe8e0" }, svg);
+    svgEl("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: t === 0 ? T.axis : T.grid }, svg);
     text(svg, m.l - 6, y(t) + 4, metric === "bias_pct" || metric === "medape" ? t + "%" : t, { "text-anchor": "end" });
   });
   const gw = (W - m.l - m.r) / 4, slot = (gw - 30) / 4;
   SRC.forEach((s, i) => {
     const gx = m.l + i * gw + 15;
-    text(svg, gx + (gw - 30) / 2, H - 14, `Source ${s} held out`, { "text-anchor": "middle", "font-weight": 600, fill: "#1d2330", "font-size": 13 });
+    text(svg, gx + (gw - 30) / 2, H - 14, `Source ${s} held out`, { "text-anchor": "middle", "font-weight": 600, fill: T.fg, "font-size": 13 });
     MODELS.forEach((k, j) => {
       const x0 = gx + j * slot, bw = slot * 0.36;
-      [[rs[s][k], "#dcd8ce", x0 + slot * 0.1, "random split"], [lo[s].overall[k], COL[k], x0 + slot * 0.1 + bw, "held-out source"]].forEach(([d, c, x, lab]) => {
+      [[rs[s][k], T.alt, x0 + slot * 0.1, "random split"], [lo[s].overall[k], COL[k], x0 + slot * 0.1 + bw, "held-out source"]].forEach(([d, c, x, lab]) => {
         const v = val(d);
-        const r = svgEl("rect", { x, width: bw - 1, y: Math.min(y(v), y(0)), height: Math.max(1, Math.abs(y(v) - y(0))), fill: c, rx: 2 }, svg);
+        const geo = { x, width: bw - 1, y: Math.min(y(v), y(0)), height: Math.max(1, Math.abs(y(v) - y(0))), rx: 2 };
+        const r = svgEl("rect", c === T.alt
+          ? { ...geo, x: x + 0.65, width: bw - 2.3, fill: "none", stroke: T.muted, "stroke-width": 1.3 }
+          : { ...geo, fill: c }, svg);
         svgEl("title", {}, r).textContent = `${NAME[k]}, source ${s}, ${lab}: ${metric === "mae" || metric === "rmse" ? L(d[metric]) : pct(d[metric], 1, metric === "bias_pct")}`;
       });
     });
   });
   // legend
-  [["#dcd8ce", "Random split (source seen in training)"], ...MODELS.map((k) => [COL[k], NAME[k] + ", held out"])].forEach(([c, l], i) => {
-    const lx = m.l + i * 178;
-    svgEl("rect", { x: lx, y: 8, width: 11, height: 11, fill: c, rx: 2 }, svg);
-    text(svg, lx + 15, 18, l, { "font-size": 11.5 });
+  let lx = m.l;
+  [[null, "Random split (source in training)"], ...MODELS.map((k) => [COL[k], NAME[k] + ", held out"])].forEach(([c, l]) => {
+    svgEl("rect", c ? { x: lx, y: 8, width: 11, height: 11, fill: c, rx: 2 }
+                    : { x: lx + 0.5, y: 8.5, width: 10, height: 10, fill: "none", stroke: T.muted, "stroke-width": 1.3, rx: 2 }, svg);
+    text(svg, lx + 15, 18, l, { "font-size": 11 });
+    lx += 15 + l.length * 5.5 + 12;
   });
   $("bars").replaceChildren(svg);
 }
@@ -181,7 +192,7 @@ function mainTable() {
 function dci(d) {
   const f = (v) => (v / 1e5).toFixed(2);
   const sig = d.ci[0] > 0 || d.ci[1] < 0;
-  return `<span style="${sig ? "font-weight:700;color:#1d2330" : ""}">${f(d.est)}</span> [${f(d.ci[0])}, ${f(d.ci[1])}]`;
+  return `<span style="${sig ? "font-weight:700;color:var(--fg)" : ""}">${f(d.est)}</span> [${f(d.ci[0])}, ${f(d.ci[1])}]`;
 }
 
 // ---------------------------------------------------------------- explorer
@@ -209,7 +220,7 @@ function drawExplorer() {
   const m = { l: 52, r: 12, t: 12, b: 40 }, lo = Math.log10(3e4), hi = Math.log10(8e6);
   const X = (v) => m.l + (Wc - m.l - m.r) * (Math.log10(Math.min(Math.max(v, 3e4), 8e6)) - lo) / (hi - lo);
   const Y = (v) => Hc - m.b - (Hc - m.t - m.b) * (Math.log10(Math.min(Math.max(v, 3e4), 8e6)) - lo) / (hi - lo);
-  ctx.font = "11.5px system-ui, sans-serif"; ctx.fillStyle = "#5d6576"; ctx.strokeStyle = "#ebe8e0";
+  ctx.font = "11.5px system-ui, sans-serif"; ctx.fillStyle = T.muted; ctx.strokeStyle = T.grid;
   [5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6].forEach((t) => {
     ctx.beginPath(); ctx.moveTo(X(t), m.t); ctx.lineTo(X(t), Hc - m.b); ctx.moveTo(m.l, Y(t)); ctx.lineTo(Wc - m.r, Y(t)); ctx.stroke();
     const lab = t / 1e5 + " L";
@@ -221,7 +232,7 @@ function drawExplorer() {
   // ±20% band and diagonal
   ctx.fillStyle = "rgba(47,143,91,0.07)"; ctx.beginPath();
   ctx.moveTo(X(3e4), Y(3e4 * 1.2)); ctx.lineTo(X(8e6 / 1.2), Y(8e6)); ctx.lineTo(X(8e6), Y(8e6)); ctx.lineTo(X(8e6), Y(8e6 * 0.8)); ctx.lineTo(X(3e4 / 0.8), Y(3e4)); ctx.lineTo(X(3e4), Y(3e4)); ctx.fill();
-  ctx.strokeStyle = "#555"; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(3e4), Y(3e4)); ctx.lineTo(X(8e6), Y(8e6)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = T.axis; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(X(3e4), Y(3e4)); ctx.lineTo(X(8e6), Y(8e6)); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle = "#2f8f5b"; ctx.textAlign = "left"; ctx.fillText("shaded: within ±20%", m.l + 8, m.t + 12);
   EX = { pts: [], rows, ix, k };
   const order = unseenOn ? [...rows].sort((a, b) => a[ix.unseen_model] - b[ix.unseen_model]) : rows;
@@ -320,7 +331,7 @@ function drawRecal() {
   const X = (i) => m.l + (W - m.l - m.r) * i / (KS.length - 1);
   const Y = (v) => m.t + (H - m.t - m.b) * (1 - (v / 1e5 - lo) / (hi - lo));
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "MAE against number of labelled listings used for recalibration" });
-  ticks.forEach((t) => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(t * 1e5), y2: Y(t * 1e5), stroke: "#ebe8e0" }, svg); text(svg, m.l - 6, Y(t * 1e5) + 4, t.toFixed(1), { "text-anchor": "end" }); });
+  ticks.forEach((t) => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(t * 1e5), y2: Y(t * 1e5), stroke: T.grid }, svg); text(svg, m.l - 6, Y(t * 1e5) + 4, t.toFixed(1), { "text-anchor": "end" }); });
   KS.forEach((kk, i) => text(svg, X(i), H - m.b + 16, kk, { "text-anchor": "middle" }));
   text(svg, (m.l + W) / 2, H - 6, "k labelled listings from the held-out source", { "text-anchor": "middle" });
   text(svg, m.l + 4, m.t + 2, "MAE (₹ L)", { "font-size": 11 });
@@ -401,7 +412,7 @@ function drawDep(row) {
   const ticks = niceTicks(0, hi, 5);
   const X = (a) => m.l + (W - m.l - m.r) * a / 20, Y = (v) => m.t + (H - m.t - m.b) * (1 - v / 1e5 / hi);
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Predicted price against age" });
-  ticks.forEach((t) => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(t * 1e5), y2: Y(t * 1e5), stroke: "#ebe8e0" }, svg); text(svg, m.l - 6, Y(t * 1e5) + 4, t + " L", { "text-anchor": "end" }); });
+  ticks.forEach((t) => { svgEl("line", { x1: m.l, x2: W - m.r, y1: Y(t * 1e5), y2: Y(t * 1e5), stroke: T.grid }, svg); text(svg, m.l - 6, Y(t * 1e5) + 4, t + " L", { "text-anchor": "end" }); });
   [0, 5, 10, 15, 20].forEach((a) => text(svg, X(a), H - m.b + 16, a, { "text-anchor": "middle" }));
   text(svg, (m.l + W - m.r) / 2, H - 4, "Age (years)", { "text-anchor": "middle" });
   svgEl("line", { x1: X(row.age), x2: X(row.age), y1: m.t, y2: H - m.b, stroke: "#b5452b", "stroke-dasharray": "3 3" }, svg);
@@ -414,9 +425,42 @@ function drawDep(row) {
   $("dep-chart").replaceChildren(svg);
 }
 
-// highlight current section in the nav
-const links = [...document.querySelectorAll(".toc a")];
-const obs = new IntersectionObserver((es) => es.forEach((e) => {
-  if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
-}), { rootMargin: "-40% 0px -55% 0px" });
-document.querySelectorAll("main section").forEach((s) => obs.observe(s));
+// ---------------------------------------------------------------- tabs + theme
+const TABS = [...document.querySelectorAll("main > section")].map((x) => x.id);
+const REDRAW = { results: () => { drawBars(); drawExplorer(); }, errors: () => drawRecal(), try: () => MOD && predict() };
+function showTab(id, scroll = true) {
+  if (!TABS.includes(id)) id = TABS[0];
+  document.querySelectorAll("main > section").forEach((x) => (x.hidden = x.id !== id));
+  document.querySelectorAll(".toc a").forEach((a) => {
+    const on = a.getAttribute("href") === "#" + id;
+    a.classList.toggle("on", on);
+    if (on) { a.setAttribute("aria-current", "page"); a.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    else a.removeAttribute("aria-current");
+  });
+  if (R && REDRAW[id]) REDRAW[id]();
+  if (scroll) document.querySelector(".toc").scrollIntoView({ block: "start" });
+}
+function addPager() {
+  TABS.forEach((id, i) => {
+    const sec = $(id), prev = TABS[i - 1], next = TABS[i + 1];
+    const label = (t) => document.querySelector(`.toc a[href="#${t}"]`).textContent;
+    sec.insertAdjacentHTML("beforeend", `<div class="pager">${prev ? `<a href="#${prev}">← ${label(prev)}</a>` : "<span></span>"}${next ? `<a href="#${next}">${label(next)} →</a>` : ""}</div>`);
+  });
+}
+document.body.classList.add("tabs-on");
+addPager();
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1), !!location.hash);
+
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("theme", t); } catch (e) { /* storage unavailable */ }
+  $("theme-btn").textContent = t === "dark" ? "☀ Light" : "☾ Dark";
+  $("theme-btn").setAttribute("aria-label", `Switch to ${t === "dark" ? "light" : "dark"} mode`);
+  refreshTheme();
+  if (R) {
+    drawBars(); drawExplorer(); drawRecal(); if (MOD) predict();
+  }
+}
+$("theme-btn").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+setTheme(document.documentElement.dataset.theme || "light");

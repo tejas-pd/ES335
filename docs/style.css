@@ -39,8 +39,7 @@ pre { background: #1f2430; color: #e8e6df; padding: 14px 16px; border-radius: 8p
 .kpi .v { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .kpi .l { font-size: 13px; color: #b9b6aa; }
 .toc { position: sticky; top: 0; z-index: 10; background: var(--nav); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
-.toc .navbar { display: flex; align-items: center; gap: 12px; }
-.toc .tabs { display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; padding: 12px 0; flex: 1; min-width: 0; scrollbar-width: thin; }
+.toc .wrap { display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; padding-top: 12px; padding-bottom: 12px; align-items: center; }
 .toc a { color: var(--muted); text-decoration: none; font-size: 14px; }
 .toc a:hover, .toc a.on { color: var(--fg); }
 section { padding: 46px 0 18px; border-bottom: 1px solid var(--line); }
@@ -104,9 +103,8 @@ input[type=range] { width: 200px; accent-color: var(--accent); }
 .loso-row span.tr { background: #8a93a5; } .loso-row span.te { background: var(--accent); }
 footer { padding: 26px 0 40px; }
 @media (max-width: 760px) {
-  .toc .navbar { gap: 8px; }
-  .toc .tabs { gap: 14px; mask-image: linear-gradient(to right, #000 85%, transparent); -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); }
-  .theme-btn { padding: 5px 10px; }
+  .hero-wrap { padding-top: 34px; }
+  .theme-btn { top: -14px; padding: 4px 10px; font-size: 12.5px; }
   .hero { padding: 28px 0 22px; }
   .hero .lede { font-size: 16px; }
   .kpis { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
@@ -124,6 +122,9 @@ body.tabs-on main > section[hidden] { display: none; }
 .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); }
 .pager a { text-decoration: none; font-weight: 600; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
 .pager a:hover { border-color: var(--accent); }
-.theme-btn { flex: none; font: inherit; font-size: 13.5px; padding: 5px 12px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
-.theme-btn:hover { border-color: var(--accent); }
+/* theme toggle sits in the header, outside the tab bar */
+.hero-wrap { position: relative; }
+.theme-btn { position: absolute; top: 0; right: 22px; font: inherit; font-size: 13.5px; padding: 5px 12px; border-radius: 999px;
+  border: 1px solid #4a5163; background: #2a3040; color: #f3f1ea; cursor: pointer; }
+.theme-btn:hover { border-color: #e0714f; }
+.hero .eyebrow { padding-right: 96px; }

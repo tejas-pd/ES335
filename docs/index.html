@@ -6,7 +6,7 @@
 <title>Used-Car Price Prediction Under Dataset Shift · ES 335</title>
 <meta name="description" content="Do used-car price models trained on some Indian listing sources work on a source they have never seen? ES 335 course project.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%23b5452b%22/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 <script>
   // Apply the saved or system theme before first paint
   (function () {
@@ -19,7 +19,8 @@
 </head>
 <body>
 <header class="hero">
-  <div class="wrap">
+  <div class="wrap hero-wrap">
+    <button type="button" id="theme-btn" class="theme-btn">☾ Dark</button>
     <p class="eyebrow">ES 335 · Course project · Kushal Kumar (24110178) &amp; Tejas Prasad (24110369)</p>
     <h1>Used-car price prediction under dataset shift</h1>
     <p class="lede">A model that prices used cars well on a random test split loses much of its accuracy when it is
@@ -30,14 +31,11 @@
 </header>
 
 <nav class="toc" aria-label="Project sections">
-  <div class="wrap navbar">
-    <div class="tabs">
+  <div class="wrap">
     <a href="#question">Question</a><a href="#data">Data</a><a href="#prep">Preprocessing</a>
     <a href="#methods">Methods</a><a href="#evaluation">Evaluation</a><a href="#results">Results</a>
     <a href="#errors">Errors</a><a href="#try">Try it</a><a href="#limits">Limitations</a>
     <a href="#conclusion">Conclusion</a><a href="#reproduce">Reproduce</a>
-    </div>
-    <button type="button" id="theme-btn" class="theme-btn">☾ Dark</button>
   </div>
 </nav>
 
@@ -383,7 +381,7 @@ python src/export_web.py data/clean.csv docs/data   # website data + compact mod
 
 </main>
 <footer><div class="wrap small">ES 335 course project · data: Kaggle "Top 4 Used Car Sales Datasets Combined" (public) · static site, no tracking</div></footer>
-<script src="models.js"></script>
-<script src="app.js"></script>
+<script src="models.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
